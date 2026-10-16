@@ -1,3 +1,4 @@
+
 # Tabular Data Analysis Agent Architecture
 
 An intelligent, multi-agent framework designed to perform automated natural language data analysis on tabular datasets (CSV and Excel). Built using **FastAPI**, **LangChain**, **LangGraph**, **Pandas**, and **Streamlit**, this system routes natural language queries through specialized agentic nodes to produce data-driven insights, statistical summaries, anomaly reports, and charts.
@@ -110,3 +111,6 @@ Accepts a file upload along with a natural language prompt.
 * `question`: The natural language query (e.g., *"Are there any anomalies in the revenue column and what is the correlation between marketing spend and sales?"*).
 
 * **Circuit Breaker:** State-level retry counters prevent infinite execution loops when presented with ambiguous or out-of-scope user queries.
+
+# Demo Video
+https://github.com/user-attachments/assets/07c79113-59ec-4d0d-989e-d327804c3cd7
