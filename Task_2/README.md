@@ -12,3 +12,6 @@ When I tried to fine tune it, but got various errors and the enough time wasn't 
 
 In future, I will surely look to upgrade myself towards the open weight and open source models... 
 Thank you, for such a challenging task 😊
+
+The google colab notebook link :-
+https://colab.research.google.com/drive/1m1fUQO01yCCFCegQCH6kyNxRyQekvAsi?usp=sharing
