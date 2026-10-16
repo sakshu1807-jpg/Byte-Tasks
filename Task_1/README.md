@@ -115,7 +115,7 @@ Accepts a file upload along with a natural language prompt.
 # Demo Video
 https://github.com/user-attachments/assets/07c79113-59ec-4d0d-989e-d327804c3cd7
 
-# Live backend url link 
+# Live backend url link (Please paste this link in the side panel)
 https://byte-tasks-okhu.onrender.com
 
 Since, this is deployed on render after 15 minutes of no activity it sleeps down and may take upto 60-90 seconds to work.
