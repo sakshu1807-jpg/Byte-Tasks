@@ -1,16 +1,55 @@
 ### THIS FRONTEND (streamlit) CODE IS ENTIRELY MADE BY USING GENERATIVE AI.
 
-import asyncio
 import hashlib
 import io
-from typing import Any
+import json
+import mimetypes
+import os
+import urllib.error
+import urllib.parse
+import urllib.request
+import uuid
 
 import pandas as pd
 import streamlit as st
 
-from state import app_graph
 from dotenv import load_dotenv
 load_dotenv()
+
+
+def analyze_with_backend(
+    backend_url: str, question: str, file_name: str, file_bytes: bytes
+) -> dict:
+    boundary = uuid.uuid4().hex
+    safe_file_name = file_name.replace("\\", "_").replace("/", "_").replace('"', "")
+    content_type = mimetypes.guess_type(safe_file_name)[0] or "application/octet-stream"
+    body = (
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="file"; filename="{safe_file_name}"\r\n'
+        f"Content-Type: {content_type}\r\n\r\n"
+    ).encode("utf-8") + file_bytes + f"\r\n--{boundary}--\r\n".encode("ascii")
+    query = urllib.parse.urlencode({"user_question": question})
+    endpoint = f"{backend_url.rstrip('/')}/upload_file?{query}"
+    request = urllib.request.Request(
+        endpoint,
+        data=body,
+        headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=300) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        error_body = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Backend returned HTTP {exc.code}: {error_body}") from exc
+
+    if not isinstance(payload, dict):
+        raise RuntimeError("Backend returned an unexpected response format.")
+    if "analysis_result" not in payload:
+        raise RuntimeError(f"Backend response did not include analysis_result: {payload}")
+    return payload
+
 
 st.set_page_config(
     page_title="Byte | Data Analyst",
@@ -41,6 +80,11 @@ st.markdown(
 )
 
 st.sidebar.header("Your dataset")
+backend_url = st.sidebar.text_input(
+    "Backend URL",
+    value=os.getenv("BACKEND_URL", "http://127.0.0.1:8000"),
+    help="Enter your FastAPI base URL, for example https://your-service.onrender.com.",
+).strip()
 uploaded_file = st.sidebar.file_uploader(
     "Choose a CSV or Excel file",
     type=["csv", "xlsx", "xls"],
@@ -138,31 +182,23 @@ with analysis_tab:
     if submitted:
         if not question.strip():
             st.warning("Enter a question before starting the analysis.")
+        elif not backend_url:
+            st.warning("Enter the FastAPI backend URL in the sidebar.")
         else:
-            initial_state: dict[str, Any] = {
-                "df": dataset,
-                "file_name": st.session_state.dataset_name,
-                "profile_summary": {},
-                "user_question": question.strip(),
-                "execution_plan": [],
-                "tool_outputs": {},
-                "retry_count": 0,
-                "validation_status": True,
-                "final_response": "",
-            }
             try:
                 with st.spinner("Analyzing your dataset..."):
-                    final_state = asyncio.run(app_graph.ainvoke(initial_state))
+                    backend_response = analyze_with_backend(
+                        backend_url,
+                        question.strip(),
+                        uploaded_file.name,
+                        file_bytes,
+                    )
             except Exception as exc:
-                st.error(
-                    "The analysis could not be completed. Check that your "
-                    "GROQ_API_KEY and GOOGLE_API_KEY are configured, then try again. "
-                    f"Details: {exc}"
-                )
+                st.error(f"The backend analysis request failed. Details: {exc}")
             else:
-                response = final_state.get("final_response", "")
-                if hasattr(response, "content"):
-                    response = response.content
+                response = backend_response["analysis_result"]
+                if isinstance(response, dict) and "content" in response:
+                    response = response["content"]
                 if isinstance(response, list):
                     text_blocks = [
                         block["text"]
@@ -176,7 +212,7 @@ with analysis_tab:
                 st.session_state.analysis = {
                     "question": question.strip(),
                     "response": response,
-                    "execution_plan": final_state.get("execution_plan", []),
+                    "execution_plan": backend_response.get("execution_plan", []),
                 }
 
     analysis = st.session_state.analysis
