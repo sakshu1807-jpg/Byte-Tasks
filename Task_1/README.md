@@ -77,11 +77,11 @@ pip install -r requirements.txt
 
 ### 3. Environment Setup
 
-Create a `.env` file in the root directory and add your LLM API credentials (e.g., OpenAI, Google Gemini, or Anthropic):
+Create a `.env` file in the root directory and add your LLM API credentials for Google and Groq:
 
 ```
 GROQ_API_KEY=your_openai_api_key_here
-# or
+# and
 GOOGLE_API_KEY=your_gemini_api_key_here
 
 ```
@@ -114,3 +114,9 @@ Accepts a file upload along with a natural language prompt.
 
 # Demo Video
 https://github.com/user-attachments/assets/07c79113-59ec-4d0d-989e-d327804c3cd7
+
+# Live backend url link 
+https://byte-tasks-okhu.onrender.com
+
+Since, this is deployed on render after 15 minutes of no activity it sleeps down and may take upto 60-90 seconds to work.
+Please run the terminal command for the terminal as it will have the url for the deployed backend on Render.
